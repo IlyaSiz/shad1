@@ -4,6 +4,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pandas.plotting import scatter_matrix
 
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+from sklearn import ensemble
+
 plt.style.use('ggplot')
 
 url = 'https://archive.ics.uci.edu/ml/machine-learning-databases/credit-screening/crx.data'
@@ -166,3 +173,140 @@ print X.shape
 print y.shape
 N, d = X.shape
 
+# Мы воспользуемся функцией train_test_split из модуля sklearn.cross_validation. и разобьем данные на
+# обучающую/тестовую выборки в отношении 70%:30%:
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=11)
+N_train = X_train.shape[0]
+N_test = X_test.shape[0]
+print N_train, N_test
+
+# kNN – метод ближайших соседей
+knn = KNeighborsClassifier()
+knn.fit(X_train, y_train)
+y_train_predict = knn.predict(X_train)
+y_test_predict = knn.predict(X_test)
+acc_train = accuracy_score(y_true=y_train, y_pred=y_train_predict)
+acc_test = accuracy_score(y_true=y_test, y_pred=y_test_predict)
+print acc_train, acc_test
+# Для нас более важным является ошибка на тестовой выборке, так как мы должны уметь предсказывать правильное
+# (по возможности) значение на новых объектах, которые при обучении были недоступны.
+
+# Попробуем уменьшить тестовую ошибку, варьируя параметры метода.
+# Основной параметр метода kk ближайших соседей – это k.
+
+# Поиск оптимальных значений параметров можно осуществить с помощью класса GridSearchCV –
+#  поиск наилучшего набора параметров, доставляющих минимум ошибке перекрестного контроля (cross-validation).
+# По умолчанию рассматривается 3-кратный перекрестный контроль.
+# Например, найдем наилучшее значение kk среди значений [1, 3, 5, 7, 10, 15]:
+n_neighbors_array = [1, 3, 5, 7, 10, 15]
+knn = KNeighborsClassifier()
+grid = GridSearchCV(knn, param_grid={'n_neighbors': n_neighbors_array})
+grid.fit(X_train, y_train)
+
+best_cv_err = 1 - grid.best_score_
+best_n_neighbors = grid.best_estimator_.n_neighbors
+print best_cv_err, best_n_neighbors
+# В качестве оптимального метод выбрал значение kk равное 7. Ошибка перекрестного контроля составила 20.7%,
+# что даже больше ошибки на тестовой выборке для 5 ближайших соседей. Это может быть обусленно тем,
+# что для построения моделей в рамках схемы перекрестного контроля используются не все данные.
+# Проверим, чему равны ошибки на обучающей и тестовой выборках при этом значении параметра
+knn = KNeighborsClassifier(n_neighbors=best_n_neighbors)
+knn.fit(X_train, y_train)
+err_train = 1 - accuracy_score(y_true=y_train, y_pred=knn.predict(X_train))
+err_test = 1 - accuracy_score(y_true=y_test, y_pred=knn.predict(X_test))
+print err_train, err_test
+# Как видим, метод ближайших соседей на этой задаче дает не слишком удовлетворительные результаты.
+
+
+# SVC – машина опорных векторов
+svc = SVC()
+svc.fit(X_train, y_train)
+err_train = 1 - accuracy_score(y_true=y_train, y_pred=svc.predict(X_train))
+err_test = 1 - accuracy_score(y_true=y_test, y_pred=svc.predict(X_test))
+print err_train, err_test
+
+# попробуем найти лучшие значения параметров для радиального ядра.
+C_array = np.logspace(-3, 3, num=7)
+gamma_array = np.logspace(-5, 2, num=8)
+svc = SVC(kernel='rbf')
+grid = GridSearchCV(svc, param_grid={'C': C_array, 'gamma': gamma_array})
+grid.fit(X_train, y_train)
+print 'CV error    = ', 1 - grid.best_score_
+print 'best C      = ', grid.best_estimator_.C
+print 'best gamma  = ', grid.best_estimator_.gamma
+
+# Посмотрим, чему равна ошибка на тестовой выборке при найденных значениях параметров алгоритма:
+svc = SVC(kernel='rbf', C=grid.best_estimator_.C, gamma=grid.best_estimator_.gamma)
+svc.fit(X_train, y_train)
+err_train = 1 - accuracy_score(y_true=y_train, y_pred=svc.predict(X_train))
+err_test = 1 - accuracy_score(y_true=y_test, y_pred=svc.predict(X_test))
+print err_train, err_test
+# 0.134575569358 0.111111111111
+
+# Линейное ядро
+C_array = np.logspace(-3, 3, num=7)
+svc = SVC(kernel='linear')
+grid = GridSearchCV(svc, param_grid={'C': C_array})
+grid.fit(X_train, y_train)
+print 'CV error    = ', 1 - grid.best_score_
+print 'best C      = ', grid.best_estimator_.C
+# CV error    =  0.151138716356
+# best C      =  0.1
+
+# Посмотрим, чему равна ошибка на тестовой выборке при найденных значениях параметров алгоритма:
+svc = SVC(kernel='linear', C=grid.best_estimator_.C)
+svc.fit(X_train, y_train)
+err_train = 1 - accuracy_score(y_true=y_train, y_pred=svc.predict(X_train))
+err_test = 1 - accuracy_score(y_true=y_test, y_pred=svc.predict(X_test))
+print err_train, err_test
+# 0.151138716356 0.125603864734
+
+# Полиномиальное ядро
+C_array = np.logspace(-5, 2, num=8)
+gamma_array = np.logspace(-5, 2, num=8)
+degree_array = [2, 3, 4]
+svc = SVC(kernel='poly')
+grid = GridSearchCV(svc, param_grid={'C': C_array, 'gamma': gamma_array, 'degree': degree_array})
+grid.fit(X_train, y_train)
+print 'CV error    = ', 1 - grid.best_score_
+print 'best C      = ', grid.best_estimator_.C
+print 'best gamma  = ', grid.best_estimator_.gamma
+print 'best degree = ', grid.best_estimator_.degree
+# CV error    =  0.138716356108
+# best C      =  0.0001
+# best gamma  =  10.0
+# best degree =  2
+
+# Посмотрим, чему равна ошибка на тестовой выборке при найденных значениях параметров алгоритма:
+svc = SVC(kernel='poly', C=grid.best_estimator_.C,
+          gamma=grid.best_estimator_.gamma, degree=grid.best_estimator_.degree)
+svc.fit(X_train, y_train)
+err_train = 1 - accuracy_score(y_true=y_train, y_pred=svc.predict(X_train))
+err_test = 1 - accuracy_score(y_true=y_test, y_pred=svc.predict(X_test))
+print err_train, err_test
+# 0.0973084886128 0.12077294686
+# Ошибка на тестовой выборке составила 12.1%.
+
+# Random Forest – случайный лес
+# Алгоритм строит ансамбль случайных деревьев, каждое из которых обучается на выборке, полученной из исходной
+# с помощью процедуры изъятия с возвращением.
+rf = ensemble.RandomForestClassifier(n_estimators=100, random_state=11)
+rf.fit(X_train, y_train)
+err_train = 1 - accuracy_score(y_true=y_train, y_pred=rf.predict(X_train))
+err_test = 1 - accuracy_score(y_true=y_test, y_pred=rf.predict(X_test))
+print err_train, err_test
+# 0.0 0.0966183574879
+
+
+rfc = ensemble.RandomForestClassifier()
+param_grid = {
+    'n_estimators': [i for i in range(100, 1001, 100)],
+    'max_features': ['auto', 'sqrt', 'log2']
+}
+CV_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
+CV_rfc.fit(X_train, y_train)
+print CV_rfc.best_params_
+print 'CV error    = ', 1 - grid.best_score_
+print 'best C      = ', grid.best_estimator_.C
+print 'best gamma  = ', grid.best_estimator_.gamma
+print 'best degree = ', grid.best_estimator_.degree
