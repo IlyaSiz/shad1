@@ -290,23 +290,59 @@ print err_train, err_test
 # Random Forest – случайный лес
 # Алгоритм строит ансамбль случайных деревьев, каждое из которых обучается на выборке, полученной из исходной
 # с помощью процедуры изъятия с возвращением.
-rf = ensemble.RandomForestClassifier(n_estimators=100, random_state=11)
+rf = ensemble.RandomForestClassifier(n_estimators=100, random_state=42)
 rf.fit(X_train, y_train)
 err_train = 1 - accuracy_score(y_true=y_train, y_pred=rf.predict(X_train))
 err_test = 1 - accuracy_score(y_true=y_test, y_pred=rf.predict(X_test))
 print err_train, err_test
 # 0.0 0.0966183574879
 
+# param_grid = {
+#     'n_estimators': [i for i in range(100, 1001, 50)]
+#     # 'n_estimators': [1, 100, 100],
+#     'max_features': ['auto', 'sqrt', 'log2']
+# }
+# CV_rfc = GridSearchCV(estimator=rf, param_grid=param_grid)
+# CV_rfc.fit(X_train, y_train)
+# print CV_rfc.best_params_
+# print 'CV error    = ', 1 - CV_rfc.best_score_
+#
+# rf = ensemble.RandomForestClassifier(n_estimators=CV_rfc.best_estimator_.n_estimators,
+#                                      max_features=CV_rfc.best_estimator_.max_features,
+#                                      random_state=42)
+# rf.fit(X_train, y_train)
+# err_train = 1 - accuracy_score(y_true=y_train, y_pred=rf.predict(X_train))
+# err_test = 1 - accuracy_score(y_true=y_test, y_pred=rf.predict(X_test))
+# print err_train, err_test
 
-rfc = ensemble.RandomForestClassifier()
-param_grid = {
-    'n_estimators': [i for i in range(100, 1001, 100)],
-    'max_features': ['auto', 'sqrt', 'log2']
-}
-CV_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
-CV_rfc.fit(X_train, y_train)
-print CV_rfc.best_params_
-print 'CV error    = ', 1 - grid.best_score_
-print 'best C      = ', grid.best_estimator_.C
-print 'best gamma  = ', grid.best_estimator_.gamma
-print 'best degree = ', grid.best_estimator_.degree
+
+# Отбор признаков (Feature Selection) с помощью алгоритма случайного леса
+importances = rf.feature_importances_
+indices = np.argsort(importances)[::-1]
+
+print("Feature importances:")
+for f, idx in enumerate(indices):
+    print("{:2d}. feature '{:5s}' ({:.4f})".format(f + 1, feature_names[idx], importances[idx]))
+
+# Построим столбцовую диаграмму, графически представляющую значимость первых 20 признаков
+d_first = 20
+plt.figure(figsize=(8, 8))
+plt.title("Feature importances")
+plt.bar(range(d_first), importances[indices[:d_first]], align='center')
+plt.xticks(range(d_first), np.array(feature_names)[indices[:d_first]], rotation=90)
+plt.xlim([-1, d_first])
+plt.show()
+
+best_features = indices[:8]
+best_features_names = feature_names[best_features]
+print(best_features_names)
+
+# GBT – градиентный бустинг деревьев решений
+# GBT – еще один метод, строящий ансамбль деревьев решений. На каждой итерации строится новый классификатор,
+# аппроксимирующий значение градиента функции потерь
+gbt = ensemble.GradientBoostingClassifier(n_estimators=100, random_state=11)
+gbt.fit(X_train[best_features_names], y_train)
+
+err_train = 1 - accuracy_score(y_true=y_train, y_pred=gbt.predict(X_train[best_features_names]))
+err_test = 1 - accuracy_score(y_true=y_test, y_pred=gbt.predict(X_test[best_features_names]))
+print err_train, err_test
