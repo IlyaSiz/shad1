@@ -7,7 +7,7 @@ import pandas
 
 
 # загрузка данных в Pandas:
-data = pandas.read_csv('titanic.csv', index_col='PassengerId')
+data = pandas.read_csv('pred/titanic.csv', index_col='PassengerId')
 
 # 1. Какое количество мужчин и женщин ехало на корабле? В качестве ответа приведите два числа через пробел.
 # 577 314

@@ -7,7 +7,7 @@ from sklearn.neighbors import KNeighborsClassifier
 import sklearn
 
 # загрузка данных в Pandas:
-data = pandas.read_csv('wine.data', header=None)
+data = pandas.read_csv('wine/wine.data', header=None)
 
 # Pandas Dataframe to np.array
 X = data.ix[:, 1:].values

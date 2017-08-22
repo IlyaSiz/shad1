@@ -15,7 +15,7 @@ import pandas
 from sklearn.tree import DecisionTreeClassifier
 
 # загрузка данных в Pandas:
-data = pandas.read_csv('titanic.csv', index_col='PassengerId')
+data = pandas.read_csv('pred/titanic.csv', index_col='PassengerId')
 actualData = data[['Pclass', 'Fare', 'Age', 'Sex', 'Survived']]
 actualData = actualData.dropna()
 actualData['Sex'] = (actualData['Sex'] == 'male')

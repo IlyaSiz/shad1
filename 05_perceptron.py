@@ -5,8 +5,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
 
 # загрузка данных в Pandas:
-data_train = pandas.read_csv('perceptron-train.csv', header=None)
-data_test = pandas.read_csv('perceptron-test.csv', header=None)
+data_train = pandas.read_csv('perceptron/perceptron-train.csv', header=None)
+data_test = pandas.read_csv('perceptron/perceptron-test.csv', header=None)
 
 # Pandas Dataframe to np.array
 X_train = data_train.ix[:, 1:].values
