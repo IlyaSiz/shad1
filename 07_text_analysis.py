@@ -27,11 +27,6 @@ feature_names = vectorizer.get_feature_names()
 # gs = GridSearchCV(estimator=clf, param_grid=grid, scoring='accuracy', cv=cv)
 # gs.fit(X, y)
 
-# ['rank_test_score', 'split4_test_score', 'mean_score_time', 'std_test_score', 'std_train_score',
-# 'split1_train_score', 'split0_test_score', 'mean_test_score', 'std_score_time', 'split2_train_score',
-# 'param_C', 'split0_train_score', 'params', 'std_fit_time', 'split4_train_score', 'split2_test_score',
-# 'split3_test_score', 'mean_train_score', 'mean_fit_time', 'split3_train_score', 'split1_test_score']
-
 # cv_results = gs.cv_results_
 # test_scores = cv_results.get('mean_test_score')
 # params_c = cv_results.get('param_C')
@@ -56,7 +51,6 @@ clf.fit(X, y)
 
 top10idx = np.array(clf.coef_.indices)[np.abs(np.array(clf.coef_.data)).argsort()[-10:]]
 print top10idx
-words = [feature_names[x] for x in top10idx]
-words.sort()
+words = sorted([feature_names[x] for x in top10idx])
 print(words)
 # atheism atheists bible god keith moon nick religion sky space
