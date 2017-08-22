@@ -12,7 +12,6 @@ svc.fit(X=X, y=y)
 X_values = X.values
 
 # print svc.support_vectors_
-for i, x in enumerate(X_values):
-    if x in svc.support_vectors_:
-        print i+1
+l = [i+1 for i, x in enumerate(X_values) if x in svc.support_vectors_]
+print l
 # Опорные объекты: 4 5 10
