@@ -49,8 +49,21 @@ print '***************************************************'
 clf = SVC(kernel='linear', C=100000, random_state=241)
 clf.fit(X, y)
 
-top10idx = np.array(clf.coef_.indices)[np.abs(np.array(clf.coef_.data)).argsort()[-10:]]
-print top10idx
+c_data = np.array(clf.coef_.data)
+# print(c_data)
+abs_c_data = np.abs(c_data)
+# print(abs_c_data)
+# sort_abs_c_data - возвращает индексы, сортирующие array
+sort_abs_c_data = abs_c_data.argsort()
+# print(sort_abs_c_data)
+last10_sort_abs_c_data = sort_abs_c_data[-10:]
+# print(last10_sort_abs_c_data)
+# массив индексов коэффициентов
+c_data_indices = np.array(clf.coef_.indices)
+# print(c_data_indices)
+top10idx = c_data_indices[last10_sort_abs_c_data]
+# print(top10idx)
+# top10idx = np.array(clf.coef_.indices)[np.abs(np.array(clf.coef_.data)).argsort()[-10:]]
 words = sorted([feature_names[x] for x in top10idx])
 print(words)
 # atheism atheists bible god keith moon nick religion sky space
