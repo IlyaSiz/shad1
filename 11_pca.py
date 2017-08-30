@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 from sklearn.decomposition import PCA
+from numpy import corrcoef
 
 # Введение
 
@@ -55,12 +56,30 @@ X = df.drop('date', axis=1)
 model = PCA(n_components=10)
 model.fit(X)
 print model.explained_variance_ratio_
-print model.components_
 
 # Скольких компонент хватит, чтобы объяснить 90% дисперсии?
+var = 0.0
+n_var = 0
+for v in model.explained_variance_ratio_:
+    n_var += 1
+    var += v
+    if var >= 0.9:
+        break
+print(n_var)
+
 # Примените построенное преобразование к исходным данным и возьмите значения первой компоненты.
+X_transformed = pd.DataFrame(model.transform(X))
+# print X_transformed
+
 # Загрузите информацию об индексе Доу-Джонса из файла djia_index.csv.
+df2 = pd.read_csv('pca/djia_index.csv')
+dow_jones_ind = df2['^DJI']
+
 # Чему равна корреляция Пирсона между первой компонентой и индексом Доу-Джонса?
+corr = corrcoef(dow_jones_ind, X_transformed[0])
+print '{:0.2f}'.format(corr[0, 1])
+
 # Какая компания имеет наибольший вес в первой компоненте? Укажите ее название с большой буквы.
-# Если ответом является нецелое число, то целую и дробную часть необходимо разграничивать точкой, например, 0.42.
-# При необходимости округляйте дробную часть до двух знаков.
+comp_index = pd.Series(model.components_[0]).sort_values(ascending=False).head(1).index[0]
+company = X.columns[comp_index]
+print company
