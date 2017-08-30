@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import pandas as pd
+from sklearn.decomposition import PCA
 
 # Введение
 
@@ -46,7 +48,15 @@
 
 # Загрузите данные close_prices.csv. В этом файле приведены цены акций 30 компаний на закрытии торгов за каждый
 # день периода.
+df = pd.read_csv('pca/close_prices.csv')
+X = df.drop('date', axis=1)
+
 # На загруженных данных обучите преобразование PCA с числом компоненты равным 10.
+model = PCA(n_components=10)
+model.fit(X)
+print model.explained_variance_ratio_
+print model.components_
+
 # Скольких компонент хватит, чтобы объяснить 90% дисперсии?
 # Примените построенное преобразование к исходным данным и возьмите значения первой компоненты.
 # Загрузите информацию об индексе Доу-Джонса из файла djia_index.csv.
