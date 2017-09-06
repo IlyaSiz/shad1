@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+import pandas as pd
+import numpy
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import r2_score
 
 # Случайный лес — это модель классификации, объединяющая некоторое количество решающих деревьев в одну композицию,
 # за счет чего улучшается их качество работы и обобщающая способность. Деревья строятся независимо друг от друга.
@@ -41,12 +47,20 @@
 # 1. Загрузите данные из файла abalone.csv. Это датасет,
 # в котором требуется предсказать возраст ракушки (число колец) по физическим измерениям.
 
+df = pd.read_csv('forest/abalone.csv')
+
 # 2. Преобразуйте признак Sex в числовой: значение F должно перейти в -1, I — в 0, M — в 1.
 # Если вы используете Pandas, то подойдет следующий код:
 # data['Sex'] = data['Sex'].map(lambda x: 1 if x == 'M' else (-1 if x == 'F' else 0))
 
+# df['Sex'] = df['Sex'].map(lambda x: 1 if x == 'M' else (-1 if x == 'F' else 0))
+df['Sex'].replace({'F': -1, 'I': 0, 'M': 1}, inplace=True)
+
 # 3. Разделите содержимое файлов на признаки и целевую переменную.
 # В последнем столбце записана целевая переменная, в остальных — признаки.
+
+X = df.drop('Rings', axis=1)
+y = df['Rings']
 
 # 4. Обучите случайный лес (sklearn.ensemble.RandomForestRegressor) с различным числом деревьев:
 # от 1 до 50 (не забудьте выставить "random_state=1" в конструкторе).
@@ -54,6 +68,32 @@
 # Используйте параметры "random_state=1" и "shuffle=True" при создании генератора кросс-валидации
 # sklearn.cross_validation.KFold. В качестве меры качества воспользуйтесь коэффициентом детерминации
 # (sklearn.metrics.r2_score).
+
+kf = KFold(n_splits=5, shuffle=True, random_state=1)
+cv_iter = list(kf.split(X, y))
+print len(cv_iter)
+
+# for train_index, test_index in kf.split(X):
+#     print("TRAIN:", train_index, "TEST:", test_index)
+
+# scores = [0.0]
+# n_estimators = xrange(1, 51)
+# for n in n_estimators:
+#     model = RandomForestRegressor(n_estimators=n, random_state=1)
+#     score = numpy.mean(cross_val_score(model, X, y, cv=kf, scoring='r2'))
+#     # score = numpy.mean(r2_score(y_true=, y_pred=))
+#     scores.append(score)
+
+# model = RandomForestRegressor(n_estimators=1, random_state=1)
+# scores = cross_val_score(model, X, y, cv=kf, scoring='r2')
+# scores2 = []
+# for train_index, test_index in kf.split(X):
+#     print train_index
+#     model.fit(X[train_index], y[train_index])
+#     score2 = r2_score(model.predict(X[train_index]), y[train_index])
+#     scores2.append(score2)
+# print scores
+# print scores2
 
 # 5. Определите, при каком минимальном количестве деревьев случайный лес показывает качество на кросс-валидации
 # выше 0.52. Это количество и будет ответом на задание.
