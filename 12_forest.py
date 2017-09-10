@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy
+import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import r2_score
+
+plt.style.use('ggplot')
 
 # Случайный лес — это модель классификации, объединяющая некоторое количество решающих деревьев в одну композицию,
 # за счет чего улучшается их качество работы и обобщающая способность. Деревья строятся независимо друг от друга.
@@ -70,32 +73,30 @@ y = df['Rings']
 # (sklearn.metrics.r2_score).
 
 kf = KFold(n_splits=5, shuffle=True, random_state=1)
-cv_iter = list(kf.split(X, y))
-print len(cv_iter)
 
-# for train_index, test_index in kf.split(X):
-#     print("TRAIN:", train_index, "TEST:", test_index)
+scores = [0.0]
+n_estimators = xrange(1, 51)
+for n in n_estimators:
+    model = RandomForestRegressor(n_estimators=n, random_state=1)
+    score = numpy.mean(cross_val_score(model, X, y, cv=kf, scoring='r2'))
+    scores.append(score)
 
-# scores = [0.0]
-# n_estimators = xrange(1, 51)
-# for n in n_estimators:
-#     model = RandomForestRegressor(n_estimators=n, random_state=1)
-#     score = numpy.mean(cross_val_score(model, X, y, cv=kf, scoring='r2'))
-#     # score = numpy.mean(r2_score(y_true=, y_pred=))
-#     scores.append(score)
-
-# model = RandomForestRegressor(n_estimators=1, random_state=1)
-# scores = cross_val_score(model, X, y, cv=kf, scoring='r2')
-# scores2 = []
-# for train_index, test_index in kf.split(X):
-#     print train_index
-#     model.fit(X[train_index], y[train_index])
-#     score2 = r2_score(model.predict(X[train_index]), y[train_index])
-#     scores2.append(score2)
-# print scores
-# print scores2
+# TODO: сделать вручную с помощью sklearn.metrics.r2_score
 
 # 5. Определите, при каком минимальном количестве деревьев случайный лес показывает качество на кросс-валидации
 # выше 0.52. Это количество и будет ответом на задание.
 
+for n, score in enumerate(scores):
+    if score > 0.52:
+        print(n)
+        break
+# 22
+
 # 6. Обратите внимание на изменение качества по мере роста числа деревьев. Ухудшается ли оно?
+# Ответ: не ухудщается, но улучшается медленно :)
+
+plt.plot(scores)
+plt.xlabel('n_estimators')
+plt.ylabel('score')
+plt.savefig('plots/estimators_score.png')
+plt.show()
