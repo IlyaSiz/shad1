@@ -80,6 +80,7 @@ def psnr(image1, image2):
 # (можно рассмотреть не более 20 кластеров, но не забудьте рассмотреть оба способа заполнения пикселей одного кластера).
 # Это число и будет ответом в данной задаче.
 
+
 for n in xrange(1, 21):
     mean_img, median_img = clusterization(pixels, n)
     psnr_mean, psnr_median = psnr(image, mean_img), psnr(image, median_img)
